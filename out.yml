@@ -1,0 +1,597 @@
+Resources:
+  PowerDevicesTable3F6B04FF:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: DeviceID
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: DeviceID
+          AttributeType: "N"
+      BillingMode: PAY_PER_REQUEST
+      TableName: PowerDevices
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesTable/Resource
+  PowerDevicesServiceServiceRole4AC6A3E1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesService/ServiceRole/Resource
+  PowerDevicesServiceServiceRoleDefaultPolicyCB7F56FA:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: "*"
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - PowerDevicesTable3F6B04FF
+                - Arn
+          - Action: dynamodb:*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - PowerDevicesTable3F6B04FF
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: PowerDevicesServiceServiceRoleDefaultPolicyCB7F56FA
+      Roles:
+        - Ref: PowerDevicesServiceServiceRole4AC6A3E1
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesService/ServiceRole/DefaultPolicy/Resource
+  PowerDevicesServiceAD32E174:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ImageUri:
+          Fn::Sub: ${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:04b23d222e521fb6c1f1ced6d962dd495564cd01f2bff77bff2a2bf2edb4b038
+      Role:
+        Fn::GetAtt:
+          - PowerDevicesServiceServiceRole4AC6A3E1
+          - Arn
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: PowerDevicesTable3F6B04FF
+      FunctionName: PowerDevicesService
+      MemorySize: 512
+      PackageType: Image
+      Timeout: 300
+    DependsOn:
+      - PowerDevicesServiceServiceRoleDefaultPolicyCB7F56FA
+      - PowerDevicesServiceServiceRole4AC6A3E1
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesService/Resource
+      aws:asset:path: asset.04b23d222e521fb6c1f1ced6d962dd495564cd01f2bff77bff2a2bf2edb4b038
+      aws:asset:dockerfile-path: Dockerfile
+      aws:asset:property: Code.ImageUri
+  PowerDevicesApiBBAAE17C:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: PowerDevices Service
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Resource
+  PowerDevicesApiDeployment579A459D10b5633ff74649502c5849cb2d48dbd3:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      Description: Automatically created by the RestApi construct
+    DependsOn:
+      - PowerDevicesApideviceDELETE6F99424E
+      - PowerDevicesApideviceGET3695C4FC
+      - PowerDevicesApideviceOPTIONSCBA4152A
+      - PowerDevicesApidevicePOSTEFF7A275
+      - PowerDevicesApidevicePUT57F92C13
+      - PowerDevicesApidevice2D066AD9
+      - PowerDevicesApiOPTIONSAD63518B
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Deployment/Resource
+  PowerDevicesApiDeploymentStageprod806354FE:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      DeploymentId:
+        Ref: PowerDevicesApiDeployment579A459D10b5633ff74649502c5849cb2d48dbd3
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: "*"
+          ResourcePath: /*
+      StageName: prod
+      TracingEnabled: true
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/DeploymentStage.prod/Resource
+  PowerDevicesApiOPTIONSAD63518B:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId:
+        Fn::GetAtt:
+          - PowerDevicesApiBBAAE17C
+          - RootResourceId
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/OPTIONS/Resource
+  PowerDevicesApidevice2D066AD9:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - PowerDevicesApiBBAAE17C
+          - RootResourceId
+      PathPart: device
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/Resource
+  PowerDevicesApideviceOPTIONSCBA4152A:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: OPTIONS
+      ResourceId:
+        Ref: PowerDevicesApidevice2D066AD9
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationResponses:
+          - ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE'"
+            StatusCode: "204"
+        RequestTemplates:
+          application/json: "{ statusCode: 200 }"
+        Type: MOCK
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Methods: true
+          StatusCode: "204"
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/OPTIONS/Resource
+  PowerDevicesApideviceGETApiPermissionCdkOmegaFrameworkStackPowerDevicesApi15B6D61CGETdeviceC6033971:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /
+            - Ref: PowerDevicesApiDeploymentStageprod806354FE
+            - /GET/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/GET/ApiPermission.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.GET..device
+  PowerDevicesApideviceGETApiPermissionTestCdkOmegaFrameworkStackPowerDevicesApi15B6D61CGETdeviceFA208905:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /test-invoke-stage/GET/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/GET/ApiPermission.Test.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.GET..device
+  PowerDevicesApideviceGET3695C4FC:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: GET
+      ResourceId:
+        Ref: PowerDevicesApidevice2D066AD9
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - PowerDevicesServiceAD32E174
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/GET/Resource
+  PowerDevicesApidevicePOSTApiPermissionCdkOmegaFrameworkStackPowerDevicesApi15B6D61CPOSTdeviceBB901614:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /
+            - Ref: PowerDevicesApiDeploymentStageprod806354FE
+            - /POST/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/POST/ApiPermission.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.POST..device
+  PowerDevicesApidevicePOSTApiPermissionTestCdkOmegaFrameworkStackPowerDevicesApi15B6D61CPOSTdevice6301F89E:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /test-invoke-stage/POST/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/POST/ApiPermission.Test.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.POST..device
+  PowerDevicesApidevicePOSTEFF7A275:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId:
+        Ref: PowerDevicesApidevice2D066AD9
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - PowerDevicesServiceAD32E174
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/POST/Resource
+  PowerDevicesApidevicePUTApiPermissionCdkOmegaFrameworkStackPowerDevicesApi15B6D61CPUTdevice724EF5F8:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /
+            - Ref: PowerDevicesApiDeploymentStageprod806354FE
+            - /PUT/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/PUT/ApiPermission.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.PUT..device
+  PowerDevicesApidevicePUTApiPermissionTestCdkOmegaFrameworkStackPowerDevicesApi15B6D61CPUTdeviceAF4B467E:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /test-invoke-stage/PUT/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/PUT/ApiPermission.Test.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.PUT..device
+  PowerDevicesApidevicePUT57F92C13:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: PUT
+      ResourceId:
+        Ref: PowerDevicesApidevice2D066AD9
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - PowerDevicesServiceAD32E174
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/PUT/Resource
+  PowerDevicesApideviceDELETEApiPermissionCdkOmegaFrameworkStackPowerDevicesApi15B6D61CDELETEdeviceFD9B0FD7:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /
+            - Ref: PowerDevicesApiDeploymentStageprod806354FE
+            - /DELETE/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/DELETE/ApiPermission.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.DELETE..device
+  PowerDevicesApideviceDELETEApiPermissionTestCdkOmegaFrameworkStackPowerDevicesApi15B6D61CDELETEdevice82F837CC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - PowerDevicesServiceAD32E174
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: PowerDevicesApiBBAAE17C
+            - /test-invoke-stage/DELETE/device
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/DELETE/ApiPermission.Test.CdkOmegaFrameworkStackPowerDevicesApi15B6D61C.DELETE..device
+  PowerDevicesApideviceDELETE6F99424E:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: DELETE
+      ResourceId:
+        Ref: PowerDevicesApidevice2D066AD9
+      RestApiId:
+        Ref: PowerDevicesApiBBAAE17C
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - PowerDevicesServiceAD32E174
+                  - Arn
+              - /invocations
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/PowerDevicesApi/Default/device/DELETE/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/02RT0/DMAzFPwv3Nvy5MI5jExIHxFS4T25iitcmrhKXqar63UnSInryz89PT3byoB536u4GrqHUpi07qtX0IaDbIkrnyYwOLJsofkLdYXH4chnmogNbG1DTkXWL/tVCgy+D00LskmvLJ/SWQojdXBBYNVW8ROV64o70mH2Z5gK1P0MIKEFt0vdJSTNVYc+BhP34DAEL6KkBwSuMMRmD7HvK4Ssese94tOgkqZsuntnkNRaIfh68xpz5hvLNJg1X+puuyZnn+V/O26Ugck3yvA/SD7J1Jz6wMyT5IRwbVJdw+3O/U0/xBy6BqPSDE7KoqqX+Aul5y9OdAQAA
+    Metadata:
+      aws:cdk:path: CdkOmegaFrameworkStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Outputs:
+  PowerDevicesApiEndpoint314B9A61:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: PowerDevicesApiBBAAE17C
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: PowerDevicesApiDeploymentStageprod806354FE
+          - /
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
