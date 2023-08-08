@@ -19,12 +19,19 @@ export class CdkOmegaFrameworkStack extends Stack {
 
     const lambda_backend = new lambda.DockerImageFunction(this, 'PowerServicesService', {
       functionName: `PowerServicesService`,
-      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '../src')),
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '../src/api')),
       timeout: Duration.minutes(5),
       memorySize: 512,
       environment: {
         TABLE_NAME: dynamodb_table.tableName
       },
+    });
+
+    const lambda_auth = new lambda.DockerImageFunction(this, 'Authorizer', {
+      functionName: `Authorizer`,
+      code: lambda.DockerImageCode.fromImageAsset(path.join(__dirname, '../src/auth')),
+      timeout: Duration.minutes(5),
+      memorySize: 512,
     });
 
     dynamodb_table.grantFullAccess(lambda_backend)
@@ -45,9 +52,15 @@ export class CdkOmegaFrameworkStack extends Stack {
 
     })
 
+    const auth = new apigateway.TokenAuthorizer(this, 'devicesAuthorizer', {
+      handler: lambda_auth
+    });
+
 
     const endpoint = api.root.addResource("device")
-    endpoint.addMethod("GET", new apigateway.LambdaIntegration(lambda_backend))
+    endpoint.addMethod("GET", new apigateway.LambdaIntegration(lambda_backend), {
+      authorizer: auth
+    })
     endpoint.addMethod("POST", new apigateway.LambdaIntegration(lambda_backend))
     endpoint.addMethod("PUT", new apigateway.LambdaIntegration(lambda_backend))
     endpoint.addMethod("DELETE", new apigateway.LambdaIntegration(lambda_backend))

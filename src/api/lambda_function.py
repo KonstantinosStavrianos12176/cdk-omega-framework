@@ -3,7 +3,6 @@ import json
 import logging
 from decimal import Decimal
 import os
-from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])  # Replace with your table name
